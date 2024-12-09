@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en" style="height: 100%">
+<head>
+  <meta charset="utf-8">
+</head>
+<body style="height: 100%;margin: 0;display: flex;flex-direction: column;justify-content: center;">
+  <h1 id ='info' style="text-align: center">Layer7 DSTAT</h1>
+  <div id="container" style="height:80%"></div>
+
+
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/exporting.js"></script>
+
+  <script type="text/javascript">
+    window.onload = () => {
+        let info = document.getElementById("info");
+
+        let chart = Highcharts.chart("container", {
+          exporting: {
+            enabled: true,
+          },
+          chart: {
+            type: "area",
+          },
+          title: {
+            text: "Layer7 DSTAT",
+          },
+          xAxis: {
+            type: "datetime",
+          },
+          yAxis: {
+            title: {
+              text: "",
+            },
+          },
+          series: [
+            {
+              name: "Requests",
+              data: [],
+            },
+            {
+              name: "Memoryusage",
+              data: [],
+            },
+            {
+              name: "Inspeed Mbps",
+              data: [],
+            },
+            {
+              name: "Outspeed Mbps",
+              data: [],
+            },
+          ],
+        });
+
+        info.innerText = "Capturing requests from " + location.host + "/dttack";
+
+        let ws = new WebSocket(
+          (location.protocol === "https:" ? "wss" : "ws") + "://" + location.host + "/ws"
+        );
+
+        ws.onmessage = (e) => {
+          let obj = JSON.parse(e.data);
+
+          let time = new Date().getTime();
+          chart.series[0].addPoint([time, Number(obj.Connection)], true, chart.series[0].points.length > 60);
+          chart.series[1].addPoint([time, Number(obj.Memoryusage)], true, chart.series[1].points.length > 60);
+          chart.series[2].addPoint([time, Number(obj.Inspeed)*0.000008], true, chart.series[2].points.length > 60);
+            chart.series[3].addPoint([time, Number(obj.Outspeed)*0.000008], true, chart.series[3].points.length > 60);
+        };
+      };
+  </script>
+</body>
+</html>
